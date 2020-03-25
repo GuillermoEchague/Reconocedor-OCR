@@ -3,11 +3,11 @@
 % Cargar imagen
 % Se realiza la carga de la imagen *.png al programa MatLab para empezar el
 % analisis de esta.
-%%
+%
 % se limpia la pantalla y se borra la memoria utilizada hasta el momento
-clc, clear all;
-close all;
-%% global im I
+ clear all, close all, clc;
+
+% global im I
 filename = uigetfile('*.png','Select an image file');
 im = imread(filename);
 imshow(im);
@@ -67,6 +67,7 @@ propied= regionprops(L);
 
 % Graficar las 'cajas' de frontera de los objetos
 imshow(BW5);
+valor_total=size(propied,1);
 for n=1:size(propied,1) 
     rectangle('Position',propied(n).BoundingBox,...
         'EdgeColor','g','LineWidth',2); 
@@ -103,43 +104,146 @@ disp(sizes);
 
 
 %%
-n=size(propied,1);
+%n=size(propied,1);
 [orden indice]=sort(sizes,1,'descend')
 %%
-indice2=indice(1:size(orden),1)
+n=size(sizes);
+%n=Ne;
+indice2=indice(1:n,1)
 disp(indice2);
 indice2=sort(indice2);
 disp(indice2(:,1));
 caracte2={};
-%%
-for i=1:size(orden)
+for i=1:n
     caracter2{i}=caracter{indice2(i,1)};
 end
 disp(caracter2);
 
 %% Escalar caracteres al tamaño del patrón o template
-
-for i=1:size(orden)
+for i=1:n
     caracter_r{i}=imresize(caracter2{i},[68 40]);
 end
+ %% Solucion 2 
+ %Desarrollo de Template para comparacion 
+ % Carga de caracteres letras para el OCR
+caracterA=(imread('caracteres\A.bmp'));
+caracterD=(imread('caracteres\D.bmp'));
+caracterF=(imread('caracteres\F.bmp'));
+caracterG=(imread('caracteres\G.bmp'));
+caracterS=(imread('caracteres\S.bmp'));
+
+% Redimensionado de caracteres letras
+caracteres{1,1}=imresize(caracterA,[68 40]);
+caracteres{2,1}=imresize(caracterD,[68 40]);
+caracteres{3,1}=imresize(caracterF,[68 40]);
+caracteres{4,1}=imresize(caracterG,[68 40]);
+caracteres{5,1}=imresize(caracterS,[68 40]);
+
+% Asignacion de caracteres para ocr
+ocr(1,1)='A';
+ocr(2,1)='D';
+ocr(3,1)='F';
+ocr(4,1)='G';
+ocr(5,1)='S';
+%clear all;
+
+%% Reconocimiento de caracteres
+[f c]=size(caracter_r);
+
+% %%
+% for j=1:5
+% caracteres{j,1}
+% figure
+% imshow(caracteres{j,1});
+% end
+% 
+% %%
+% for i=1:n
+% caracter_r{i}
+% figure
+% imshow(caracter_r{i});
+% end
 %%
- % Label and count connected components
-    [L Ne] = bwlabel(BW5);  
-    %%
-    for n=1:Ne
-        [r,c] = find(L==n);
-        % Extract letter
-        n1=bwlabel(min(r):max(r),min(c):max(c));  
-        % Resize letter (same size of template)
-        img_r=imresize(n1,[42 24]);
-        %Uncomment line below to see letters one by one
-         %imshow(img_r);pause(0.5)
-        % -------------------------------------------------------------------
-        % Call fcn to convert image to text
-        %letter=read_letter(img_r,num_letras);
-        % Letter concatenation
-        %word=[word letter];
-    end
+%close all;
+% %%
+%figure
+%imshow(caracter_r{2});
+
+%% Desarrollo de la correlación para la determinación del valor del carácter
+comp=[];
+letra=[];
+puntero=0;
+
+%%
+for i=1:Ne
+for j=1:5
+comp(j,1)=corr2(caracteres{j,1},caracter_r{i});
+%figure
+%imshow(caracteres{j,1});
+end
+puntero=find(max(comp)==comp);
+letra=[letra ocr(puntero,1)];
+end
+
+
+%% Guardar y Abrir .txt con la info de la imagen
+
+%save(filename)
+%save(filename,variables)
+%save(filename,variables,fmt)
+
+%Escriba una tabla corta de la función exponencial en un 
+%archivo de texto llamado exp.txt.
+
+%x = 0:.1:1;
+%A = [x; exp(x)];
+
+%fileID = fopen('exp.txt','w');
+%fprintf(fileID,'%6s %12s\n','x','exp(x)');
+%fprintf(fileID,'%6.2f %12.8f\n',A);
+%fclose(fileID);
+
+
+%formatSpec = 'X is %4.2f meters or %8.3f mm\n';
+%fprintf(formatSpec,A1,A2);
+%a = [1.02 3.04 5.06];
+%fprintf('%d\n',round(a));
+%fclose(fid);
+%winopen('text.txt')%Open 'text.txt' file
+%fid = fopen('text.txt', 'wt');%Opens text.txt as file for write
+
+
+% %% Histograma
+% clear all; clear figure; clc;
+% filename = uigetfile({'*.jpg;*.png;*.pgm;*.tif;*.bmp','All Image Files';...
+%     '*.*','All Files'});
+% % I = imread(filename);
+% % imhist(I)
+% % I = gpuArray(imread(filename));
+% %  [counts,x] = imhist(I);
+% %  stem(x,counts);
+% im = imread(filename);
+% im_1 =rgb2gray(im);%pasar la imagen a escala de grises. 
+% imD = double(im_1);
+% [f,c]=size(imD);
+%  
+% for i=1:256
+%     h(i) = 0;
+% end
+%  
+% for i=1:f
+%        for j=1:c
+%            k = imD(i,j);
+%            h(k+1) = h(k+1)+1;
+%        end
+% end
+% plot(h);
+% j=histeq(im_1); % extender los valores de intensidad
+% 
+% subplot(3,2,1),subimage(im_1),title('Imagen original'); 
+% subplot(3,2,2),imshow(j),title('Intensidad'); % distribución de intensidades en una imagen
+% subplot(3,1,2),imhist(im_1),title('Histograma'); % distribución de intensidades en una imagen
+% subplot(3,1,3),plot(h),title('Histograma'); % distribución de intensidades en una imagen
 
 %%
 % idx=max(max(L));
@@ -168,78 +272,7 @@ end
 %   'EdgeColor','r','LineWidth',2 )
 % end
 
-    
- %% Solucion 2 
- %Desarrollo de Template para comparacion 
- %% Carga de caracteres letras para el OCR
-caracterA=(imread('caracteres\A.bmp'));
-caracterD=(imread('caracteres\D.bmp'));
-caracterF=(imread('caracteres\F.bmp'));
-caracterG=(imread('caracteres\G.bmp'));
-caracterS=(imread('caracteres\S.bmp'));
-
-%% Redimensionado de caracteres letras
-caracteres{1,1}=imresize(caracterA,[68 40]);
-caracteres{2,1}=imresize(caracterD,[68 40]);
-caracteres{3,1}=imresize(caracterF,[68 40]);
-caracteres{4,1}=imresize(caracterG,[68 40]);
-caracteres{5,1}=imresize(caracterS,[68 40]);
-
-%% Asignacion de caracteres para ocr
-ocr(1,1)='A';
-ocr(2,1)='D';
-ocr(3,1)='F';
-ocr(4,1)='G';
-ocr(5,1)='S';
-save ('caracteres','caracteres')
-%clear all;
-%%
-C = struct2cell(st);
-% Fin Carga de caracteres
-%%
-global caracteres
-num_letras=size(C,2);
-comp=[ ];
-%% Desarrollo de la correlación para la determinación del valor del carácter
-for n=1:size(caracteres)
-for m=1:num_letras
-    sem=corr2(caracteres{n,1},C{1,m});
-    comp=[comp sem];
-end
-end
-
-%%
-vd=find(comp==max(comp));
-%*-*-*-*-*-*-*-*-*-*-*-*-*-
-if vd==1
-    letter='A';
-elseif vd==2
-    letter='D';
-elseif vd==3
-    letter='F';
-elseif vd==4
-    letter='G';
-elseif vd==5
-    letter='S';
-end
-
-
-%% Reconocimiento de caracteres
-[f c]=size(caracter_r);
-%comp=zeros(15,1);
-puntero=0;
-patente=[''];
-
-comp=0;
-for i=1:n
-    for j=1:5
-        comp(j,1)=corr2(caracteres{j,1},caracter_r{i});
-    end
-    puntero=find(max(comp)==comp);
-    patente=[patente ocr(puntero,1)];
-end
-
-    %%
+%
 % %% Carga de caracteres numeros para el OCR
 % caracterA=(imread('caracteres\A.bmp'));
 % caracterB=(imread('caracteres\B.bmp'));
@@ -326,5 +359,3 @@ end
 % ocr(25,1)='Y';
 % ocr(26,1)='Z';
 % % Fin Carga de caracteres
-
-%%
