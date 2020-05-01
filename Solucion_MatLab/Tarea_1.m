@@ -1,4 +1,88 @@
-% OCR (Optical Character Recognition)
+%% SOLUCION 1: Bayes Classifier
+%Es un clasificador probabilístico que se fundamenta en el teorema de Bayes. 
+%Como utiliza una hipótesis simplificadora como es la independencia entre 
+% las variables que se van a usar.
+
+% PASO 1: Carga y seleccion de los elementos de la imagen Training para
+% determinar la probabilidad de los elementos encontrados para ser
+% utilizados en el desarrollo del seleccionador.
+
+
+
+% Cargar imagen
+% Se realiza la carga de la imagen *.png al programa MatLab para empezar el
+% analisis de esta.
+%
+% se limpia la pantalla y se borra la memoria utilizada hasta el momento
+ clear all, close all, clc;
+ warning('off', 'Images:initSize:adjustingMag');
+% %% Se carga el path de la imagen *.png que se va a analizar
+%filename = uigetfile('*.png','Select an image file');
+filename = 'Training_02.png';
+im = imread(filename);
+% Muestra La Imagen de entrada
+imshow(im);
+title('Imagen de entrada')
+%% Scale data and display as image%
+% Escala de informacion y desplego como imagen 
+imagesc(im);
+I=rgb2gray(im);
+im_g=I;
+
+% Binarización 
+umb=graythresh(im_g); 
+bw=(im2bw(im_g,umb));
+% Operación morfológica bridge. Los puentes de sin conectar píxeles, 
+%es decir, establecen píxeles con valores 0 
+%si tienen dos vecinos distintos de cero que no están conectados.
+BW4 = bwmorph(bw,'bridge');
+
+% Quita los píxeles aislados (1s individuales que están rodeados por 0s)
+BW5 = bwmorph(BW4,'clean');
+
+% %% Recortar Caracteres
+[L Ne] = bwlabel(BW5);  
+ %% Calcular propiedades de los objetos de la imagen 
+Area= regionprops(L,'Area');
+Centroide= regionprops(L,'Centroid');
+Perimetro= regionprops(L,'Perimeter');
+%%
+Area1=cell2mat(struct2cell(Area)');
+Perimetro1=cell2mat(struct2cell(Perimetro)');
+Centroide1=cell2mat(struct2cell(Centroide)');
+%%
+Trainig=[Centroide1,Area1,Perimetro1];
+TrainigOrdenado=sortrows(Trainig,2);
+%%
+X_training=TrainigOrdenado(:,3);
+Y_training=TrainigOrdenado(:,4);
+%%
+plot(X_training,Y_training,':');
+
+%%
+prueba1=struct2cell(Area)';
+prueba2=struct2cell(Centroide)';
+prueba3=struct2cell(Perimetro)';
+%%
+
+%Total=[prueba1, prueba2];
+
+ %% Se ordena por la posicion y, de la coordenada (x,y) del centroide de
+% la imagen recortada de cada elemento seleccionado
+
+
+boundingbox1=sortrows(boundingbox,2);
+
+valor_total=size(propied,1);
+
+
+
+
+
+%%
+
+% SOLUCION 2: OCR (Optical Character Recognition)
+%              Reconocimiento optico de caracteres
 %% %%%%%%%%%%%%%%%%%%%%%
 % Cargar imagen
 % Se realiza la carga de la imagen *.png al programa MatLab para empezar el
@@ -6,8 +90,9 @@
 %
 % se limpia la pantalla y se borra la memoria utilizada hasta el momento
  clear all, close all, clc;
- %%
-filename = uigetfile('*.png','Select an image file');
+% %% Se carga el path de la imagen *.png que se va a analizar
+%filename = uigetfile('*.png','Select an image file');
+filename = 'Testing.png';
 im = imread(filename);
 % Muestra La Imagen de entrada
 imshow(im);
@@ -16,90 +101,114 @@ title('Imagen de entrada')
 % Escala de informacion y desplego como imagen 
 imagesc(im);
 I=rgb2gray(im);
-% Normalizar Contraste
-X=I;
-[N,M] = size(X);
-    Y = zeros(N,M);
-    [i,j] = sort(X(:));
-    z = zeros(N*M,1);
-    d = fix(N*M/256+0.5);
-    for i=1:255;
-        z((i-1)*d+1:i*d) = (i-1)*ones(d,1);
-    end
-    z(255*d+1:N*M) = 255*ones(N*M-255*d,1);
-    Y(j) = z;
-im_g=X;
+im_g=I;
 
 % Binarización 
 umb=graythresh(im_g); 
 bw=(im2bw(im_g,umb));
-% Unir pixeles
+% Operación morfológica bridge. Los puentes de sin conectar píxeles, 
+%es decir, establecen píxeles con valores 0 
+%si tienen dos vecinos distintos de cero que no están conectados.
 BW4 = bwmorph(bw,'bridge');
-% Limpieza de pixeles solitarios
+
+% Quita los píxeles aislados (1s individuales que están rodeados por 0s)
 BW5 = bwmorph(BW4,'clean');
 
-% Recortar Caracteres
+% %% Recortar Caracteres
 [L Ne] = bwlabel(BW5);  
-
-% Calcular propiedades de los objetos de la imagen 
+ % Calcular propiedades de los objetos de la imagen 
 propied= regionprops(L);
 
-% Graficar las 'cajas' de frontera de los objetos
-%imshow(BW5);
-valor_total=size(propied,1);
+%%
+
+propied1=AreaPrueba(L);
+
+%%
+% Se selecciona la propiedad Bounding Box de la imagen
 for n=1:size(propied,1) 
-    rectangle('Position',propied(n).BoundingBox,...
-        'EdgeColor','g','LineWidth',2); 
-    pause (0.01)
-end 
-pause (0.1) 
-%%
-clear boundingbox;
-for i=1:valor_total
-    boundingbox(i,:)=propied(i,:).BoundingBox;
+boundingbox(n,:)=propied(n).BoundingBox;
 end
-%%
-proporcion=boundingbox(:,3)./boundingbox(:,4);
-[f c]=size(proporcion);
-disp(proporcion);
-%%
-puntero=find(proporcion>2 | proporcion<0);
-proporcion(puntero)=0;
-puntero=find(proporcion~=0);
+ %% Se ordena por la posicion y, de la coordenada (x,y) del centroide de
+% la imagen recortada de cada elemento seleccionado
+boundingbox1=sortrows(boundingbox,2);
+
+valor_total=size(propied,1);
+
+
+%% Redimenzionar los elementos de la imagen de prueba
+
+
+ %%
+clear boundingbox;
+for  n=1:Ne
+ boundingbox(n,:)=boundingbox1(n,:);
+end
 %%
 caracter={};
-for i=1:f
-    boxplaca=propied(puntero(i,1),:).BoundingBox;
-    caracter{i}=imcrop(BW5,boxplaca);
-end
-%disp(caracter);
-%%
-[f c]=size(caracter);
-sizes=[];
-for i=1:c
-    sizes=[sizes; size(caracter{i})];
-end
-disp(sizes);
-%%
-%[orden indice]=sort(sizes,1)
-%%
-n=size(sizes);
-indice2=sizes(1:n,1)
-disp(indice2);
-%indice2=sort(indice2);
-%disp(indice2(:,1));
-caracte2={};
 
-for i=1:n
-    caracter2{i}=caracter{indice2(i,1)};
-end
-disp(caracter2);
+for i=1:Ne 
+        boxpletra=boundingbox1(i,:);
+        caracter{i}=imcrop(BW5,boxpletra);
+       
+  end
 
-%% Escalar caracteres al tamaño del patrón o template
+%%
+% Escalar caracteres al tamaño del patrón o template
 for i=1:n
-    caracter_r{i}=imresize(caracter2{i},[68 40]);
+    caracter_r{i}=imresize(caracter{i},[68 40]);
 end
- %% Solucion 2 
+
+%% Calcular area y perimetro del la letra
+Area={};
+for i=1:n
+Area{i}=bwarea(caracter_r{i});
+end
+
+Perimetro={};
+for i=1:n
+Perimetro{i}=bwperim(caracter_r{i});
+end
+
+
+%%
+
+% Dibujar BoundingBox en la imagen
+
+for n=1:size(propied,1) 
+    rectangle('Position',boundingbox1(n,:),...
+        'EdgeColor','g','LineWidth',2); 
+    %pause (1)
+end 
+%pause (0.1) 
+
+ %%
+clear boundingbox;
+for  n=1:Ne
+ boundingbox(n,:)=boundingbox1(n,:);
+end
+%%
+caracter={};
+
+for i=1:Ne 
+        boxpletra=boundingbox1(i,:);
+        caracter{i}=imcrop(BW5,boxpletra);
+       
+  end
+
+%%
+% Escalar caracteres al tamaño del patrón o template
+for i=1:n
+    caracter_r{i}=imresize(caracter{i},[68 40]);
+end
+
+%%
+% figure
+% for i=62:67
+%     imshow(caracter_r{i});
+%     pause(0.01)
+% end
+
+%%
  %Desarrollo de Template para comparacion 
  % Carga de caracteres letras para el OCR
 caracterA=(imread('caracteres\A.bmp'));
@@ -123,44 +232,39 @@ ocr(4,1)='G';
 ocr(5,1)='S';
 %clear all;
 
-%% Reconocimiento de caracteres
-[f c]=size(caracter_r);
-
-%%
-for j=1:5
-caracteres{j,1}
-figure
-imshow(caracteres{j,1});
-end
-
-%%
-for i=1:5
-caracter_r{i}
-figure
-imshow(caracter_r{i});
-end
-%%
-%close all;
-% %%
-%figure
-%imshow(caracter_r{2});
-
-%% Desarrollo de la correlación para la determinación del valor del carácter
+% %% Reconocimiento de caracteres
+% Desarrollo de la correlación para la determinación del valor del carácter
 comp=[];
 letra=[];
 puntero=0;
 
-%%
-for i=1:valor_total
+%
+for i=1:size(propied,1)
 for j=1:5
 comp(j,1)=corr2(caracteres{j,1},caracter_r{i});
-%figure
-%imshow(caracteres{j,1});
+
 end
 puntero=find(max(comp)==comp);
 letra=[letra ocr(puntero,1)];
 
 end
+
+
 %%
 fileID = fopen('letras.txt','w');
 fprintf(fileID,letra);
+fid = fopen('letras.txt', 'wt');
+%%
+%Label
+label={'A','S','D','F','G'};
+%Matriz de Confusion
+MC=[36,0,0,0,0;
+2,34,0,0,0;
+0,2,34,0,0;
+0,0,0,36,0;
+0,0,5,0,31];
+%% Normalización de la matriz de confusion
+MNC=100/36*MC;
+
+%%
+cm = confusionchart(MC);
